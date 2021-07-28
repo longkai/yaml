@@ -55,7 +55,7 @@ import (
         "fmt"
         "log"
 
-        "gopkg.in/yaml.v2"
+        "github.com/longkai/yaml.v2"
 )
 
 var data = `

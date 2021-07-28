@@ -307,6 +307,12 @@ type fieldInfo struct {
 var structMap = make(map[reflect.Type]*structInfo)
 var fieldMapMutex sync.RWMutex
 
+// Tag is an optional tag for a field.
+var Tag = "yaml"
+
+// StructOrArrayPrefix is the prefix for a struct or array that is used.
+var StructOrArrayPrefix = ""
+
 func getStructInfo(st reflect.Type) (*structInfo, error) {
 	fieldMapMutex.RLock()
 	sinfo, found := structMap[st]
@@ -327,7 +333,14 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 
 		info := fieldInfo{Num: i}
 
-		tag := field.Tag.Get("yaml")
+		tag := field.Tag.Get(Tag)
+		if tag == "" {
+			tag = field.Tag.Get("yaml")
+		}
+		if tag == "" {
+			tag = field.Tag.Get("json")
+		}
+
 		if tag == "" && strings.Index(string(field.Tag), ":") < 0 {
 			tag = string(field.Tag)
 		}
@@ -351,6 +364,17 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 				}
 			}
 			tag = fields[0]
+		}
+
+		var structOrArray bool
+		switch field.Type.Kind() {
+		case reflect.Struct, reflect.Array, reflect.Map, reflect.Slice:
+			structOrArray = true
+		case reflect.Ptr:
+			switch field.Type.Elem().Kind() {
+			case reflect.Struct, reflect.Array, reflect.Map, reflect.Slice:
+				structOrArray = true
+			}
 		}
 
 		if inline {
@@ -395,6 +419,9 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 			info.Key = strings.ToLower(field.Name)
 		}
 
+		if structOrArray && StructOrArrayPrefix != "" {
+			info.Key = StructOrArrayPrefix + info.Key
+		}
 		if _, found = fieldsMap[info.Key]; found {
 			msg := "Duplicated key '" + info.Key + "' in struct " + st.String()
 			return nil, errors.New(msg)

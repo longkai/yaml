@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"gopkg.in/yaml.v2"
+	"github.com/longkai/yaml/v2"
 )
 
 // An example showing how to unmarshal embedded
