@@ -309,6 +309,7 @@ var fieldMapMutex sync.RWMutex
 
 // Tag is an optional tag for a field.
 var Tag = "yaml"
+var Env = "*"
 
 // StructOrArrayPrefix is the prefix for a struct or array that is used.
 var StructOrArrayPrefix = ""
@@ -343,6 +344,12 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 
 		if tag == "" && strings.Index(string(field.Tag), ":") < 0 {
 			tag = string(field.Tag)
+		}
+		if strings.HasPrefix(tag, "*.*.*.*.") {
+			idx := strings.Index(tag, ".*")
+			if idx > 0 {
+				tag = tag[:idx+1] + Env + tag[idx+2:]
+			}
 		}
 		if tag == "-" {
 			continue
